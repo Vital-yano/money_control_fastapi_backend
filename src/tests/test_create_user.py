@@ -16,6 +16,7 @@ async def test_create_user(client, get_user_from_database, add_user_to_redis):
     await add_user_to_redis(
         user_data["tg_id"],
         user_data["phone_number"],
+        user_data["tg_nickname"],
         user_data["verification_code"],
     )
     response = client.post("/user/create", content=json.dumps(user_data))
@@ -64,6 +65,7 @@ async def test_create_user_with_the_same_tg_id(
     await add_user_to_redis(
         user_data_with_the_same_tg_id["tg_id"],
         user_data_with_the_same_tg_id["phone_number"],
+        user_data_with_the_same_tg_id["tg_nickname"],
         user_data_with_the_same_tg_id["verification_code"],
     )
     resp = client.post(
@@ -107,6 +109,7 @@ async def test_create_user_with_the_same_phone_number(
     await add_user_to_redis(
         user_data_with_the_same_phone_number["tg_id"],
         user_data_with_the_same_phone_number["phone_number"],
+        user_data_with_the_same_phone_number["tg_nickname"],
         user_data_with_the_same_phone_number["verification_code"],
     )
     resp = client.post(
@@ -212,7 +215,9 @@ async def test_create_user_with_wrong_verification_code(client, add_user_to_redi
         "verification_code": 654321,
         "registration_time": datetime.strftime(datetime.now(UTC), "%Y-%m-%d %H:%M:%S"),
     }
-    await add_user_to_redis(user_data["tg_id"], user_data["phone_number"], 123456)
+    await add_user_to_redis(
+        user_data["tg_id"], user_data["phone_number"], user_data["tg_nickname"], 123456
+    )
     resp = client.post("/user/create", content=json.dumps(user_data))
     assert resp.status_code == 422
     assert "Wrong verification code" in resp.json()["detail"]
@@ -228,7 +233,9 @@ async def test_create_user_with_expired_code(client, add_user_to_redis):
             datetime.now(UTC) + timedelta(minutes=30), "%Y-%m-%d %H:%M:%S"
         ),
     }
-    await add_user_to_redis(user_data["tg_id"], user_data["phone_number"], 123456)
+    await add_user_to_redis(
+        user_data["tg_id"], user_data["phone_number"], user_data["tg_nickname"], 123456
+    )
     resp = client.post("/user/create", content=json.dumps(user_data))
     assert resp.status_code == 422
     assert "The code has expired. Request new code" in resp.json()["detail"]

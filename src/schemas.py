@@ -55,6 +55,7 @@ class ShowUserSchema(BaseModel):
 class UserAddtoRedisSchema(BaseModel):
     tg_id: str
     phone_number: str
+    tg_nickname: str
 
     @field_validator("phone_number")
     @classmethod

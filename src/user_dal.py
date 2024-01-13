@@ -34,7 +34,7 @@ class UserRedisDAL:
         self.redis_client = redis_client
 
     async def create_user(
-        self, tg_id: str, phone_number: str, verification_code: int
+        self, tg_id: str, phone_number: str, tg_nickname: str, verification_code: int
     ) -> dict:
         index = self.redis_client.ft("idx:user")
         try:
@@ -49,6 +49,7 @@ class UserRedisDAL:
         new_user = {
             "tg_id": tg_id,
             "phone_number": phone_number,
+            "tg_nickname": tg_nickname,
             "verification_code": verification_code,
             "expire_at": datetime.strftime(
                 datetime.now(UTC) + USER_REGISTRATION_TIMEDELTA, "%Y-%m-%d %H:%M:%S"
@@ -64,6 +65,6 @@ class UserRedisDAL:
     async def get_user(self, tg_id: str) -> dict:
         user_from_redis = (
             await self.redis_client.ft(index_name="idx:user").search(tg_id)
-        ).docs[0]  # type: ignore
+        ).docs[0]
         user_from_redis = json.loads(user_from_redis.json)
         return user_from_redis

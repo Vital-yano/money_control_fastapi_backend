@@ -28,6 +28,7 @@ class User(Base):
 redis_schema = (
     TextField("$.tg_id", as_name="tg_id"),
     TextField("$.phone_number", as_name="phone_number"),
+    TextField("$.tg_nickname", as_name="tg_nickname"),
     NumericField("$.verification_code", as_name="code"),
     TextField("$.expire_at", as_name="expire_at"),
 )

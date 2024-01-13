@@ -181,7 +181,7 @@ async def clean_redis(redis_pool):
 @pytest.fixture
 async def add_user_to_redis(redis_pool):
     async def add_user_to_redis(
-        tg_id: str, phone_number: str, verification_code: int
+        tg_id: str, phone_number: str, tg_nickname: str, verification_code: int
     ) -> dict:
         index = redis_pool.ft("idx:user")
         try:
@@ -196,6 +196,7 @@ async def add_user_to_redis(redis_pool):
         new_user = {
             "tg_id": tg_id,
             "phone_number": phone_number,
+            "tg_nickname": tg_nickname,
             "verification_code": verification_code,
             "expire_at": datetime.strftime(
                 datetime.now(UTC) + USER_REGISTRATION_TIMEDELTA, "%Y-%m-%d %H:%M:%S"

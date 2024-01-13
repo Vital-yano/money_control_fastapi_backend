@@ -32,6 +32,7 @@ async def _add_user_to_redis(
     await user_redis_dal.create_user(
         tg_id=body.tg_id,
         phone_number=body.phone_number,
+        tg_nickname=body.tg_nickname,
         verification_code=verification_code,
     )
 
