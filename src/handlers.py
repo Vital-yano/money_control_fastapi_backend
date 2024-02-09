@@ -1,16 +1,15 @@
 import logging
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from redis.asyncio.client import Redis
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from config import SMS_API_ID
 from src.actions import (
     _add_user_to_redis,
     _create_new_user,
     _is_verified_code_and_registration_time,
+    _send_code_via_call,
 )
 from src.db import get_db, get_redis
 from src.schemas import (
@@ -19,7 +18,7 @@ from src.schemas import (
     UserAddtoRedisSchema,
     UserCreateSchema,
 )
-from src.utils import _generate_code
+from src.utils import get_code
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +46,11 @@ async def create_user(
 async def send_code(
     body: UserAddtoRedisSchema,
     redis: Redis = Depends(get_redis),
-    verification_code=Depends(_generate_code),
+    generated_test_code: str | None = Depends(get_code),
 ) -> SendCodeSchema:
-    get_sms_url = f"https://sms.ru/sms/send?api_id={SMS_API_ID}&to={body.phone_number[1:]}&msg={verification_code}&json=1&test=1"
-    async with httpx.AsyncClient() as httpx_client:
-        await httpx_client.get(get_sms_url)
+    if generated_test_code:
+        verification_code = generated_test_code
+    else:
+        verification_code = await _send_code_via_call(body)
     await _add_user_to_redis(body, redis, verification_code)
     return SendCodeSchema(code=verification_code)

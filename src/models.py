@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from redis.commands.search.field import NumericField, TextField
+from redis.commands.search.field import TextField
 from sqlalchemy import String, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -29,6 +29,6 @@ redis_schema = (
     TextField("$.tg_id", as_name="tg_id"),
     TextField("$.phone_number", as_name="phone_number"),
     TextField("$.tg_nickname", as_name="tg_nickname"),
-    NumericField("$.verification_code", as_name="code"),
+    TextField("$.verification_code", as_name="code"),
     TextField("$.expire_at", as_name="expire_at"),
 )

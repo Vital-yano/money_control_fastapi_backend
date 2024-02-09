@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 import config
 
-
 async_engine = create_async_engine(
     url=config.SQLALCHEMY_DATABASE_URL,
     future=True,
@@ -31,7 +30,7 @@ async def get_db() -> AsyncGenerator | None:
 
 
 async def get_redis() -> AsyncGenerator | None:
-    """Dependency для получения клиента redis"""
+    """Dependency для получения redis"""
     redis_client = None
 
     try:
@@ -39,4 +38,4 @@ async def get_redis() -> AsyncGenerator | None:
         yield redis_client
     finally:
         if redis_client:
-            await redis_client.close()
+            await redis_client.aclose()

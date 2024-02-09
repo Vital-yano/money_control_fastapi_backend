@@ -1,6 +1,6 @@
 # Money_control_fastapi_backend
 
-![GitHub](https://img.shields.io/github/license/kaccuteput/money_control_fastapi_backend) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/kaccuteput/money_control_fastapi_backend)
+![GitHub](https://img.shields.io/github/license/vital-yano/money_control_fastapi_backend) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/kaccuteput/money_control_fastapi_backend)
 
 ### Описание
 Репозиторий содержить бэкенд с использованием фреймворка FastAPI для приложения по контролю своих расходов. Управление осуществляется с помощью телеграмм бота (буден написан позднее).
@@ -24,14 +24,25 @@ Postgres и Redis поднимаются в Docker.
 python -m venv venv && source venv/bin/activate && pip install -r req.txt
 ```
 
+Запуск локальных и тестовых бд и redis:
+```bash
+make db_and_redis_local
+```
+
 Создание таблиц в бд:
 ```bash
 alembic upgrade heads
+TESTING=1 alembic upgrade heads
 ```
 
-Запуск тестов:
+Создание индексов в Redis:
 ```bash
-make test
+python create_redis_indices.py
+```
+
+Запуск тестов: 
+```bash
+pytest src/tests -svv
 ```
 
 Запуск приложения:
@@ -43,7 +54,9 @@ python main.py
 ```
 0.0.0.0:8000/docs
 ```
-Для отправки сообщений используется сервис SMS.RU. После регистрации добавьте свой SMS_API_ID в файл .env.
+
+Для получения кода для регистрации используется сервис SMS.RU (с помощью звонка).
+После регистрации добавьте свой SMS_API_ID в файл .env.
 
 ### Планы на будущее
 На данный момент реализована только регистрация пользователей. Планируется реализовать позже:

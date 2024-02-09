@@ -1,6 +1,5 @@
 import asyncio
 import json
-import os
 from datetime import UTC, datetime
 
 import asyncpg
@@ -8,8 +7,6 @@ import pytest
 from redis.asyncio.client import Redis
 from redis.asyncio.connection import ConnectionPool
 from redis.commands.json.path import Path
-from redis.commands.search.indexDefinition import IndexDefinition, IndexType
-from redis.exceptions import ResponseError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.sql import text
 from starlette.testclient import TestClient
@@ -22,8 +19,7 @@ from config import (
 )
 from main import app
 from src.db import get_db, get_redis
-from src.models import redis_schema
-from src.utils import _generate_code
+from src.handlers import get_code
 
 CLEAN_TABLES = [
     "user_account",
@@ -35,13 +31,6 @@ def event_loop():
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
-
-
-@pytest.fixture(scope="session", autouse=True)
-def run_migrations():
-    os.environ["TESTING"] = "1"
-    os.system("alembic upgrade heads")
-    os.environ.pop("TESTING")
 
 
 async def _get_test_db():
@@ -63,7 +52,7 @@ async def _get_test_redis():
 
 
 def _generate_test_code():
-    return 123456
+    return "1234"
 
 
 @pytest.fixture(scope="function")
@@ -74,7 +63,7 @@ def client():
 
     app.dependency_overrides[get_db] = _get_test_db
     app.dependency_overrides[get_redis] = _get_test_redis
-    app.dependency_overrides[_generate_code] = _generate_test_code
+    app.dependency_overrides[get_code] = _generate_test_code
     with TestClient(app) as client:
         yield client
 
@@ -144,19 +133,6 @@ async def redis_pool():
     await redis_client.aclose()
 
 
-@pytest.fixture(scope="session", autouse=True)
-async def create_index(redis_pool):
-    index = redis_pool.ft("idx:user")
-    try:
-        await index.create_index(
-            redis_schema,
-            definition=IndexDefinition(prefix=["user:"], index_type=IndexType.JSON),
-        )
-    except ResponseError as exc:
-        if exc.args[0] == "Index already exists":
-            pass
-
-
 @pytest.fixture
 async def get_user_from_redis(redis_pool):
     async def get_user_from_redis_by_tg_id(tg_id: str):
@@ -171,11 +147,7 @@ async def get_user_from_redis(redis_pool):
 
 @pytest.fixture(scope="function", autouse=True)
 async def clean_redis(redis_pool):
-    try:
-        await redis_pool.ft(index_name="idx:user").dropindex(delete_documents=True)
-    except ResponseError as exc:
-        if exc.args[0] == "idx:user: no such index":
-            pass
+    await redis_pool.json().delete(Path.root_path())  # type: ignore
 
 
 @pytest.fixture
@@ -183,16 +155,6 @@ async def add_user_to_redis(redis_pool):
     async def add_user_to_redis(
         tg_id: str, phone_number: str, tg_nickname: str, verification_code: int
     ) -> dict:
-        index = redis_pool.ft("idx:user")
-        try:
-            await index.create_index(
-                redis_schema,
-                definition=IndexDefinition(prefix=["user:"], index_type=IndexType.JSON),
-            )
-        except ResponseError as exc:
-            if exc.args[0] == "Index already exists":
-                pass
-
         new_user = {
             "tg_id": tg_id,
             "phone_number": phone_number,

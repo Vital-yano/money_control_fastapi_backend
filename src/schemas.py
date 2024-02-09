@@ -7,6 +7,8 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 PHONE_NUMBER_MATCH_PATTERN = re.compile(r"^\+7[0-9]+$")
 
+VERIFICATION_CODE_MATCH_PATTERN = re.compile(r"^[0-9]{4}$")
+
 
 def _validate_phone_number(value):
     if not PHONE_NUMBER_MATCH_PATTERN.match(value):
@@ -25,7 +27,7 @@ class UserCreateSchema(BaseModel):
     tg_id: str
     phone_number: str
     tg_nickname: str
-    verification_code: int
+    verification_code: str
     registration_time: datetime
 
     @field_validator("phone_number")
@@ -36,9 +38,9 @@ class UserCreateSchema(BaseModel):
     @field_validator("verification_code")
     @classmethod
     def validate_code(cls, value):
-        if value < 100000 and value > 999999:
+        if not VERIFICATION_CODE_MATCH_PATTERN.match(value):
             raise HTTPException(
-                status_code=422, detail="Code should contain exactly 6 digits"
+                status_code=422, detail="Code should contain exactly 4 digits"
             )
         return value
 
@@ -64,14 +66,14 @@ class UserAddtoRedisSchema(BaseModel):
 
 
 class SendCodeSchema(BaseModel):
-    code: int
+    code: str
 
     @field_validator("code")
     @classmethod
     def validate_code(cls, value):
-        if value < 100000 and value > 999999:
+        if not VERIFICATION_CODE_MATCH_PATTERN.match(value):
             raise HTTPException(
                 status_code=422,
-                detail="Verification code should be >100000 and <999999",
+                detail="Verification code should be >0000 and <9999",
             )
         return value

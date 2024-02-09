@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import UTC, datetime
 
 from redis.asyncio.client import Redis
@@ -9,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import USER_REGISTRATION_TIMEDELTA
 from src.models import User, redis_schema
+
+logger = logging.getLogger(__name__)
 
 
 class UserDbDal:
@@ -33,19 +36,21 @@ class UserRedisDAL:
     def __init__(self, redis_client: Redis):
         self.redis_client = redis_client
 
-    async def create_user(
-        self, tg_id: str, phone_number: str, tg_nickname: str, verification_code: int
-    ) -> dict:
+    async def create_index(self):
         index = self.redis_client.ft("idx:user")
         try:
             await index.create_index(
                 redis_schema,
                 definition=IndexDefinition(prefix=["user:"], index_type=IndexType.JSON),
             )
+            logger.info("Indices has been created!")
         except ResponseError as exc:
             if exc.args[0] == "Index already exists":
-                pass
+                logger.info(exc.args[0])
 
+    async def create_user(
+        self, tg_id: str, phone_number: str, tg_nickname: str, verification_code: str
+    ) -> dict:
         new_user = {
             "tg_id": tg_id,
             "phone_number": phone_number,
@@ -65,6 +70,6 @@ class UserRedisDAL:
     async def get_user(self, tg_id: str) -> dict:
         user_from_redis = (
             await self.redis_client.ft(index_name="idx:user").search(tg_id)
-        ).docs[0]
+        ).docs[0]  # type: ignore
         user_from_redis = json.loads(user_from_redis.json)
         return user_from_redis

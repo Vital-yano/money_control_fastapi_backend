@@ -10,7 +10,7 @@ async def test_create_user(client, get_user_from_database, add_user_to_redis):
         "tg_id": "88005553535",
         "phone_number": "+79991234567",
         "tg_nickname": "pogchamp",
-        "verification_code": 123456,
+        "verification_code": "1234",
         "registration_time": datetime.strftime(datetime.now(UTC), "%Y-%m-%d %H:%M:%S"),
     }
     await add_user_to_redis(
@@ -47,7 +47,7 @@ async def test_create_user_with_the_same_tg_id(
         "tg_id": "88005553535",
         "phone_number": "+71234567890",
         "tg_nickname": "pogchamp2",
-        "verification_code": 123456,
+        "verification_code": "1234",
         "registration_time": datetime.strftime(datetime.now(UTC), "%Y-%m-%d %H:%M:%S"),
     }
     await create_user_in_database(
@@ -91,7 +91,7 @@ async def test_create_user_with_the_same_phone_number(
         "tg_id": "2323909093",
         "phone_number": "+79991234567",
         "tg_nickname": "pogchamp2",
-        "verification_code": 123456,
+        "verification_code": "1234",
         "registration_time": datetime.strftime(datetime.now(UTC), "%Y-%m-%d %H:%M:%S"),
     }
     await create_user_in_database(
@@ -173,7 +173,7 @@ async def test_create_user_with_the_same_phone_number(
                 "tg_id": "88005553535",
                 "phone_number": "9232453434",
                 "tg_nickname": "pogchamp",
-                "verification_code": 123456,
+                "verification_code": "1234",
                 "registration_time": datetime.strftime(
                     datetime.now(UTC), "%Y-%m-%d %H:%M:%S"
                 ),
@@ -188,7 +188,7 @@ async def test_create_user_with_the_same_phone_number(
                 "tg_id": "88005553535",
                 "phone_number": "+7880055535353232",
                 "tg_nickname": "pogchamp",
-                "verification_code": 123456,
+                "verification_code": "1234",
                 "registration_time": datetime.strftime(
                     datetime.now(UTC), "%Y-%m-%d %H:%M:%S"
                 ),
@@ -212,11 +212,11 @@ async def test_create_user_with_wrong_verification_code(client, add_user_to_redi
         "tg_id": "88005553535",
         "phone_number": "+79991234567",
         "tg_nickname": "pogchamp",
-        "verification_code": 654321,
+        "verification_code": "4321",
         "registration_time": datetime.strftime(datetime.now(UTC), "%Y-%m-%d %H:%M:%S"),
     }
     await add_user_to_redis(
-        user_data["tg_id"], user_data["phone_number"], user_data["tg_nickname"], 123456
+        user_data["tg_id"], user_data["phone_number"], user_data["tg_nickname"], "1234"
     )
     resp = client.post("/user/create", content=json.dumps(user_data))
     assert resp.status_code == 422
@@ -228,13 +228,13 @@ async def test_create_user_with_expired_code(client, add_user_to_redis):
         "tg_id": "88005553535",
         "phone_number": "+79991234567",
         "tg_nickname": "pogchamp",
-        "verification_code": 123456,
+        "verification_code": "1234",
         "registration_time": datetime.strftime(
             datetime.now(UTC) + timedelta(minutes=30), "%Y-%m-%d %H:%M:%S"
         ),
     }
     await add_user_to_redis(
-        user_data["tg_id"], user_data["phone_number"], user_data["tg_nickname"], 123456
+        user_data["tg_id"], user_data["phone_number"], user_data["tg_nickname"], "1234"
     )
     resp = client.post("/user/create", content=json.dumps(user_data))
     assert resp.status_code == 422

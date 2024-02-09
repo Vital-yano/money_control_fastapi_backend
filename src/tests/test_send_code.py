@@ -11,7 +11,7 @@ async def test_send_code(client, get_user_from_redis):
     assert response.status_code == 200
     data_from_resp = response.json()
     redis_user_data = await get_user_from_redis(user_data["tg_id"])
-    assert data_from_resp["code"] == 123456
+    assert data_from_resp["code"] == "1234"
     assert user_data["tg_id"] == redis_user_data["tg_id"]
     assert user_data["phone_number"] == redis_user_data["phone_number"]
     assert user_data["tg_nickname"] == redis_user_data["tg_nickname"]
